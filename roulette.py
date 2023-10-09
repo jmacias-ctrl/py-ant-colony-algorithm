@@ -14,12 +14,23 @@ import numpy as np
 #Esto nos da una probabilidad de 0 a 1
 #Luego sacamos un numero aleatorio entre 0 y 1 y buscamos dentro del array el valor mas cercano al obtenido y obtenemos su indice
 #lo hacemos por segunda vez y estos seran los dos indices padres de la poblacion y se retornan estos
-def roulette(size, probabilietes):
+
+def buscar_rng_cercano(matrix_probabilidades, valor_rng):
+    matrix_probabilidades = np.asarray(matrix_probabilidades)
+    index = (np.abs(matrix_probabilidades - valor_rng)).argmin()
+    return index
+
+def roulette(producto_punto, ant):
     index = -1
+    sum_producto_punto = np.sum(producto_punto)
+    prob_eligir_nodo = producto_punto/sum_producto_punto
+    for k in range(len(prob_eligir_nodo)):
+            if(k>0):
+                prob_eligir_nodo[k]+=prob_eligir_nodo[k-1]
+    for city in ant:
+        if(city!=0):
+            prob_eligir_nodo[city-1]=-1
     while(index==-1):
         rng = np.random.random()
-        for i in range(size):
-            if(probabilietes[i]>0 and rng<probabilietes[i]):
-                index = i
-                break
+        index = buscar_rng_cercano(prob_eligir_nodo, rng)
     return index
