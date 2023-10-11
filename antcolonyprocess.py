@@ -16,11 +16,15 @@ def calc_matrix_distancia(tamanio, matriz_coordenadas):
     matrix_distance = np.sqrt(matrix_distance)
     return matrix_distance
 
-def update_matrix_feromona_global(matrix_feromona_global, tiempo_inicial, fe_feromona, costo_mejor_hormiga):
-    t = (process_time() - tiempo_inicial) - 1
-    matrix_feromona_global = np.power(matrix_feromona_global, t)
-    matrix_feromona_global = matrix_feromona_global * (1-  fe_feromona)
+def update_matrix_feromona_global(matrix_feromona_global, tiempo_inicial, fe_feromona, costo_mejor_hormiga, mejor_hormiga, tamanio):
+    matrix_feromona_global = matrix_feromona_global*(1-fe_feromona)
     matrix_feromona_global = matrix_feromona_global + fe_feromona*(1/costo_mejor_hormiga)
+    ciudad_1 = mejor_hormiga[0]-1
+    for i in range(1, len(mejor_hormiga)):
+        ciudad_2 = mejor_hormiga[i]-1
+        matrix_feromona_global[ciudad_1][ciudad_2] = 1/costo_mejor_hormiga
+        matrix_feromona_global[ciudad_2][ciudad_1] = 1/costo_mejor_hormiga
+        ciudad_1 = ciudad_2
     return matrix_feromona_global
 
 def update_matrix_feromona_local(matrix_feromona_local, matrix_feromona_global,nodo_1, nodo_2, tiempo_inicial, fe_feromona):
@@ -30,6 +34,7 @@ def update_matrix_feromona_local(matrix_feromona_local, matrix_feromona_global,n
     return matrix_feromona_local
 
 def cheq_mejor_hormiga(ants_colony, mejor_hormiga, costo_mejor_hormiga, matrix_distance):
+    costo_mejor_hormiga_anterior = costo_mejor_hormiga
     for ant in ants_colony:
         solution_ant = calculate_distances(matrix_distance, ant)
         if(solution_ant<costo_mejor_hormiga):
@@ -37,7 +42,7 @@ def cheq_mejor_hormiga(ants_colony, mejor_hormiga, costo_mejor_hormiga, matrix_d
             mejor_hormiga = ant
     print('Mejor hormiga:\n', mejor_hormiga)
     print('Distancia:', costo_mejor_hormiga,'\n')
-    return mejor_hormiga, costo_mejor_hormiga
+    return mejor_hormiga, costo_mejor_hormiga, costo_mejor_hormiga_anterior
 
 def gen_matrix_heuristica(matrix_distance):
     matrix_heuristic = 1/matrix_distance
@@ -55,8 +60,7 @@ def calculate_distances(matrix_distance, ant):
     return total_distance
 
 def calc_feromona_local(nivel_feromona, nivel_feromona_global,tiempo_inicial, factor_evaporacion):
-    t = (process_time() - tiempo_inicial)-1
-    update_feromona = ((1-factor_evaporacion)*pow(nivel_feromona,t)) + (factor_evaporacion*nivel_feromona_global)
+    update_feromona = ((1-factor_evaporacion)*nivel_feromona) + (factor_evaporacion*nivel_feromona_global)
     return update_feromona
 
 def generar_colonia_hormigas(tamanio, num_hormigas,matrix_distance):
