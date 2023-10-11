@@ -5,21 +5,22 @@ def setSeed(getSeed):
     np.random.seed(getSeed)
     return True
 
-def calc_matrix_distancia(tamanio, values):
+def calc_matrix_distancia(tamanio, matriz_coordenadas):
     matrix_distance = np.zeros((tamanio, tamanio), dtype=float)
     for i in range(tamanio):
         for j in range(tamanio):
-            coordinates_1 = values[i]
-            coordinates_2 = values[j]
+            coordinates_1 = matriz_coordenadas[i]
+            coordinates_2 = matriz_coordenadas[j]
             radicante = ((coordinates_2[0]-coordinates_1[0])*(coordinates_2[0]-coordinates_1[0]))+((coordinates_2[1]-coordinates_1[1])*(coordinates_2[1]-coordinates_1[1]))
             matrix_distance[i][j] = radicante
     matrix_distance = np.sqrt(matrix_distance)
     return matrix_distance
 
 def update_matrix_feromona_global(matrix_feromona_global, tiempo_inicial, fe_feromona, costo_mejor_hormiga):
-    for i in range(len(matrix_feromona_global)):
-        for j in range(len(matrix_feromona_global[i])):
-            matrix_feromona_global[i][j] = calc_feromona_global(matrix_feromona_global[i][j], tiempo_inicial, fe_feromona, costo_mejor_hormiga)
+    t = (process_time() - tiempo_inicial) - 1
+    matrix_feromona_global = np.power(matrix_feromona_global, t)
+    matrix_feromona_global = matrix_feromona_global * (1-  fe_feromona)
+    matrix_feromona_global = matrix_feromona_global + fe_feromona*(1/costo_mejor_hormiga)
     return matrix_feromona_global
 
 def update_matrix_feromona_local(matrix_feromona_local, matrix_feromona_global,nodo_1, nodo_2, tiempo_inicial, fe_feromona):
@@ -47,23 +48,16 @@ def calculate_distances(matrix_distance, ant):
     total_distance = 0
     last_city = ant[0] - 1
     for i in range(1,len(ant)):
-        total_distance += matrix_distance[last_city][ant[i]-1]
-        last_city = ant[i] - 1
+        next_city = ant[i]-1
+        total_distance += matrix_distance[last_city][next_city]
+        last_city = next_city
+    total_distance += matrix_distance[last_city][ant[0]-1]
     return total_distance
-
-def calc_feromona_global(nivel_feromona, tiempo_inicial, factor_evaporacion, costo_mejor_solucion):
-    t = (process_time() - tiempo_inicial)-1
-    if(t<0):
-        t = t*-1
-    nivel_feromona = ((1-factor_evaporacion)*pow(nivel_feromona,t)) + (factor_evaporacion*(1/costo_mejor_solucion))
-    return nivel_feromona
 
 def calc_feromona_local(nivel_feromona, nivel_feromona_global,tiempo_inicial, factor_evaporacion):
     t = (process_time() - tiempo_inicial)-1
-    if(t<0):
-        t = t*-1
-    nivel_feromona = ((1-factor_evaporacion)*pow(nivel_feromona,t)) + (factor_evaporacion*nivel_feromona_global)
-    return nivel_feromona
+    update_feromona = ((1-factor_evaporacion)*pow(nivel_feromona,t)) + (factor_evaporacion*nivel_feromona_global)
+    return update_feromona
 
 def generar_colonia_hormigas(tamanio, num_hormigas,matrix_distance):
     ants_colony = np.zeros((num_hormigas, tamanio), dtype=int)
