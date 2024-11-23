@@ -1,1 +1,2 @@
-# tarea_2_AMIN
+# Ant Colony Algorithm
+Implementation of the ant colony algorithm in python
